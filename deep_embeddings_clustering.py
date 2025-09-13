@@ -19,10 +19,10 @@ class FakeKMeans:
 
 
 class DeepEmbeddingsClustering:
-  def __init__(self, n_clusters=8, n_bins=1000, random_state=23, fraud_rate_threshold=0.8):
+  def __init__(self, n_clusters=8, n_bins=1000, random_state=23, target_rate_threshold=0.8):
     self.n_clusters = n_clusters
     self.n_bins = n_bins
-    self.fraud_rate_threshold = fraud_rate_threshold
+    self.target_rate_threshold = target_rate_threshold
     self.random_state = random_state
 
   def get_num_cat(self, X: pd.DataFrame, copy=False):
@@ -109,7 +109,7 @@ class DeepEmbeddingsClustering:
     for lbl in list(set(labels)):
       pos_events = sum(((labels == lbl) & (y == 1)).astype(int))
       neg_events = sum(((labels == lbl) & (y == 0)).astype(int))
-      if pos_events / (pos_events + neg_events) < self.fraud_rate_threshold:
+      if pos_events / (pos_events + neg_events) < self.target_rate_threshold:
         exclusion_clusters.append(lbl)
 
     if len(exclusion_clusters) == len(list(set(labels))):
