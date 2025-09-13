@@ -1,5 +1,5 @@
 # distance_cluster
-Purpose of these models is to replace static rules describing target data sub-populations with a dynamic model based on clustering of target data.
+Purpose of these models is to replace static rules describing target data sub-populations with a dynamic model based on clustering of target data. These methods are mainly designed for the prevention of recurrences of known behavior, especially if it observes minor behavioral volatility that is prone to escape static rules.
 
 ## baseline model: clustering.py
 The baseline model consumes a diverse set of positive target data. It scales the numerical features within the input data to a mu = 0, sigma = 1 population, and applies Principal Component Analysis to decompose the data to its core coponents.
