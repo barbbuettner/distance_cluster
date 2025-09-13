@@ -45,18 +45,14 @@ class DeepEmbeddingsClustering:
 
   def get_cat_woe(self, X: pd.DataFrame, y: pd.Series):
     woe_map = {}
-    eps = 1e-6 
     for col in getattr(self, "categorical_columns", []):
       woe_map_col = {}
       for colval in set(X[col]):
-        mask = X[col] == colval
-        pos_events = np.sum((y == 1) & mask)
-        neg_events = np.sum((y == 0) & mask)
-        events = np.sum(mask)
-        if events == 0:
-          continue
-        perc_pos = (pos_events + eps) / (events + eps)
-        perc_neg = (neg_events + eps) / (events + eps)
+        pos_events = sum(((y == 1) & (X[col] == colval)).astype(int))
+        neg_events = sum(((y == 0) & (X[col] == colval)).astype(int))
+        events = sum((X[col] == colval).astype(int))
+        perc_pos = pos_events / events
+        perc_neg = neg_events / events
         woe_map_col[colval] = np.log(perc_pos / perc_neg)
       woe_map[col] = woe_map_col
     self.woe_map = woe_map
@@ -70,9 +66,7 @@ class DeepEmbeddingsClustering:
 
     imputer = SimpleImputer(strategy="constant", fill_value=-1)
     scaler = StandardScaler()
-    self.preprocessor_num = Pipeline(
-      [("imputer", imputer), ("scaler", scaler)]
-    ).fit(X[self.numerical_columns])
+    self.preprocessor_num = Pipeline([("imputer", imputer), ("scaler", scaler)]).fit(X[self.numerical_columns])
     return self.preprocessor_num.transform(X[self.numerical_columns])
 
   def preprocess_cat(self, X: pd.DataFrame):
