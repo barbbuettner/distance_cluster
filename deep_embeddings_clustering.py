@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
 from sklearn.cluster import KMeans
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
@@ -105,7 +105,7 @@ class DeepEmbeddingsClustering:
     X_cat = self.preprocess_cat(X)
     X_transformed = np.hstack((X_num, X_cat))
 
-    self.dec_model = MLPRegressor(hidden_layer_sizes=(256, 64, 8), random_state=self.random_state)
+    self.dec_model = MLPClassifier(hidden_layer_sizes=(256, 64, 8), random_state=self.random_state)
     self.dec_model.fit(X_transformed, y)
     X_reconstructed = self.forward_to_penultimate(X_transformed)
     self.clustering_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state)
