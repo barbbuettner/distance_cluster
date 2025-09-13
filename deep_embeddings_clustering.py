@@ -7,6 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 class FakeKMeans:
+    """creating a mock-KMeans model to address the case that all only one cluster fits the fraud rate requirement"""
     def __init__(self, center):
         self.cluster_centers_ = np.array([center])
         self.n_clusters = 1
@@ -26,6 +27,8 @@ class DeepEmbeddingsClustering:
     self.random_state = random_state
 
   def get_num_cat(self, X: pd.DataFrame, copy=False):
+    """separate the columns into numerical and categorical for variable preprocessing. 
+    Hard coding missing numericals as -1 and missing categoricals as '' to align with internal criteria."""
     if copy:
       X = X.copy()
 
@@ -44,15 +47,17 @@ class DeepEmbeddingsClustering:
     return X
 
   def get_cat_woe(self, X: pd.DataFrame, y: pd.Series):
+    """creating Weight of Evidence map for categorical features"""
+    eps = 1e-6
     woe_map = {}
     for col in getattr(self, "categorical_columns", []):
       woe_map_col = {}
       for colval in set(X[col]):
-        pos_events = sum(((y == 1) & (X[col] == colval)).astype(int))
-        neg_events = sum(((y == 0) & (X[col] == colval)).astype(int))
-        events = sum((X[col] == colval).astype(int))
+        pos_events = sum(((y == 1) & (X[col] == colval)).astype(int)) + eps
+        neg_events = sum(((y == 0) & (X[col] == colval)).astype(int)) + eps
+        events = sum((X[col] == colval).astype(int)) + eps
         perc_pos = pos_events / events
-        perc_neg = neg_events / events
+        perc_neg = neg_events / events 
         woe_map_col[colval] = np.log(perc_pos / perc_neg)
       woe_map[col] = woe_map_col
     self.woe_map = woe_map
@@ -89,6 +94,9 @@ class DeepEmbeddingsClustering:
     return reconstructed_data
 
   def fit(self, X: pd.DataFrame, y: pd.Series):
+    """applies all preprocessing on the input data, trains a MLPClassifier model to build target inspired embeddings, 
+    and trains a KMeans clustering model over the resulting dataset. Then modifies the KMeans model to leave only the clusters
+    meeting the target rate criteria. Finally, it builds the distance percentiles for the input data"""
     if hasattr(self, 'percentiles'):
       return self
 
@@ -128,10 +136,11 @@ class DeepEmbeddingsClustering:
 
     dists = self.clustering_model.transform(X_reconstructed)
     nearest_dist = dists.min(axis=1)
-    self.percentiles = np.searchsorted(np.percentile(nearest_dist, np.linspace(0, 100, self.n_bins)))
+    self.percentiles = np.percentile(nearest_dist, np.linspace(0, 100, self.n_bins))
     return self
 
   def transform(self, X:pd.DataFrame):
+    """returns the distance to the nearest target-rate dense centers"""
     if not hasattr(self, 'percentiles'):
       print("Must fit the model first")
       return self
