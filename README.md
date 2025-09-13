@@ -25,5 +25,18 @@ The output is expected to be an array of distances between 0 and 1, with 0 denot
 
 ## embeddings model: deep_embeddings_clustering.py
 This model represents an improvement over the baseline model in the following aspects:
-a. clustering over artifacts acquired from supervised preprocessing
+a. clustering over artifacts acquired from supervised preprocessing, and
 b. integration of categorical data through Weight of Evidence mapping
+Structurally, the idea is very similar: learn local representations of target positive and target distributed input data to obtain insights on proximity to any target data dense cluster.
+### process flow
+For this model we need training data X, and target data y. Any unseen data that we want to transform shall be denoted X_oot.
+#### 1 - fitting the model
+```
+clustering = DeepEmbeddingsClustering()
+clustering.fit(X, y)
+```
+#### 2 - transforming any new (unessen) data
+```
+distances = clustering.transform(X_oot)
+```
+The output is expected to be an array of distances between 0 and 1, with 0 denoting close proximity to a target-dense cluster.
