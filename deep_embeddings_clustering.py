@@ -135,8 +135,11 @@ class DeepEmbeddingsClustering:
     if not hasattr(self, 'percentiles'):
       print("Must fit the model first")
       return self
-    X_decomposed = self._preprocess(X)
-    dists = self.clustering_model.transform(X_decomposed)
+    X_num = self.preprocess_num(X)
+    X_cat = self.preprocess_cat(X)
+    X_transformed = np.hstack((X_num, X_cat))
+    X_reconstructed = self.forward_to_penultimate(X_transformed)
+    dists = self.clustering_model.transform(X_reconstructed)
     nearest_dist = dists.min(axis=1)
     dist_percentile_idx = np.searchsorted(self.percentiles, nearest_dist)
     dist_percentile = dist_percentile_idx / self.n_bins
