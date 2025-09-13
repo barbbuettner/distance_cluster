@@ -6,12 +6,24 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+class FakeKMeans:
+    def __init__(self, center):
+        self.cluster_centers_ = np.array([center])
+        self.n_clusters = 1
+    
+    def predict(self, X):
+        return np.zeros(X.shape[0], dtype=int)
+    
+    def transform(self, X):
+        return np.linalg.norm(X - self.cluster_centers_[0], axis=1).reshape(-1, 1)
+
 
 class DeepEmbeddingsClustering:
-  def __init__(self, n_clusters=8, n_bins=1000, random_state=23):
+  def __init__(self, n_clusters=8, n_bins=1000, random_state=23, fraud_rate_threshold=0.8):
     self.is_fitted = False
     self.n_clusters = n_clusters
     self.n_bins = n_bins
+    self.fraud_rate_threshold = fraud_rate_threshold
     self.random_state = random_state
 
   def get_num_cat(self, X: pd.DataFrame, copy=False):
@@ -86,17 +98,41 @@ class DeepEmbeddingsClustering:
   def fit(self, X: pd.DataFrame, y: pd.Series):
     if self.is_fitted:
       return self
+
     X = self.get_num_cat(X)
     self.get_cat_woe(X, y)
     X_num = self.preprocess_num(X)
     X_cat = self.preprocess_cat(X)
     X_transformed = np.hstack((X_num, X_cat))
+
     self.dec_model = MLPRegressor(hidden_layer_sizes=(256, 64, 8), random_state=self.random_state)
     self.dec_model.fit(X_transformed, y)
     X_reconstructed = self.forward_to_penultimate(X_transformed)
     self.clustering_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state)
     self.clustering_model.fit(X_reconstructed)
     self.is_fitted = True
+
+    labels = self.clustering_model.predict(X_reconstructed)
+    exclusion_clusters = []
+    for lbl in list(set(labels)):
+      pos_events = sum(((labels == lbl) & (y == 1)).astype(int))
+      neg_events = sum(((labels == lbl) & (y == 0)).astype(int))
+      if pos_events / (pos_events + neg_events) < self.fraud_rate_threshold:
+        exclusion_clusters.append(lbl)
+
+    if len(exclusion_clusters) == len(list(set(labels))):
+      print("No cluster meets the fraud rate criteria. Stopping modification")
+      return self
+
+    final_labels = np.where(np.isin(labels, exclusion_clusters), -1, labels)
+    remaining_centers = self.clustering_model.cluster_centers_[~np.isin(np.arange(self.clustering_model.n_clusters), exclusion_clusters)]
+
+    if len(exclusion_clusters) + 1 == len(list(set(labels))):
+      self.clustering_model = FakeKMeans(remaining_centers)
+      return self
+    
+    self.n_clusters = remaining_centers.shape[0]
+    self.clustering_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state, n_init=1, init=remaining_centers).fit(X_reconstructed)
     return self
 
   def predict_distance_percentile(self, X: pd.DataFrame):
