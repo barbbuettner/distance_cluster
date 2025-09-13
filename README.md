@@ -6,6 +6,7 @@ The idea of these models is to describe targeted patterns as clusters in a laten
 ## Model parameters
 ### all distance models
 `n_clusters` : denotes the number of clusters in the clustering model(s). We generally recommend pre-assessment through silhouette scores, elbow plots, or other methods. Using a number that is too low may lead to high distance outputs even in target positive data. Using a number that is too high may lead to singular random data points in the input data skewing the output and mis-classifying target negative data as target positive.
+
 `n_bins` : denotes the granularity of the distance percentiles. 10 bins is equivalent to single-digit distance output, 100 bins is equivalent to double-digit distance output, and so on. A higher number of bins requires slightly more memory capacity, while a lower number of bins may lead to poor output quality.
 ### baseline model only
 `n_components` : we apply Principal Component Analysis during the preprocessing, the output of PCA is then used as input for the clustering model. Due to the curse of high dimensionality in clustering, we recommend n_components on a lower side, while ensuring not to lose too much insights. The input can either be an integer >= 1, fixing the number of components, or a float between 0 and 1, which creates the number of components based on tolerable information loss.
