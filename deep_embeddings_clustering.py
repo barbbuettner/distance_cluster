@@ -20,7 +20,6 @@ class FakeKMeans:
 
 class DeepEmbeddingsClustering:
   def __init__(self, n_clusters=8, n_bins=1000, random_state=23, fraud_rate_threshold=0.8):
-    self.is_fitted = False
     self.n_clusters = n_clusters
     self.n_bins = n_bins
     self.fraud_rate_threshold = fraud_rate_threshold
@@ -96,7 +95,7 @@ class DeepEmbeddingsClustering:
     return reconstructed_data
 
   def fit(self, X: pd.DataFrame, y: pd.Series):
-    if self.is_fitted:
+    if hasattr(self, 'percentiles'):
       return self
 
     X = self.get_num_cat(X)
@@ -110,7 +109,6 @@ class DeepEmbeddingsClustering:
     X_reconstructed = self.forward_to_penultimate(X_transformed)
     self.clustering_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state)
     self.clustering_model.fit(X_reconstructed)
-    self.is_fitted = True
 
     labels = self.clustering_model.predict(X_reconstructed)
     exclusion_clusters = []
@@ -133,17 +131,19 @@ class DeepEmbeddingsClustering:
     
     self.n_clusters = remaining_centers.shape[0]
     self.clustering_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state, n_init=1, init=remaining_centers).fit(X_reconstructed)
-    return self
 
-  def predict_distance_percentile(self, X: pd.DataFrame):
-    if not self.is_fitted:
-      print("Must fit first")
-      return None
-    X_num = self.preprocess_num(X)
-    X_cat = self.preprocess_cat(X)
-    X_transformed = np.hstack((X_num, X_cat))
-    X_reconstructed = self.forward_to_penultimate(X_transformed)
     dists = self.clustering_model.transform(X_reconstructed)
     nearest_dist = dists.min(axis=1)
-    percentiles = np.searchsorted(np.percentile(nearest_dist, np.linspace(0, 100, self.n_bins)))
-    return percentiles / self.n_bins
+    self.percentiles = np.searchsorted(np.percentile(nearest_dist, np.linspace(0, 100, self.n_bins)))
+    return self
+
+  def transform(self, X:pd.DataFrame):
+    if not hasattr(self, 'percentiles'):
+      print("Must fit the model first")
+      return self
+    X_decomposed = self._preprocess(X)
+    dists = self.clustering_model.transform(X_decomposed)
+    nearest_dist = dists.min(axis=1)
+    dist_percentile_idx = np.searchsorted(self.percentiles, nearest_dist)
+    dist_percentile = dist_percentile_idx / self.n_bins
+    return dist_percentile
