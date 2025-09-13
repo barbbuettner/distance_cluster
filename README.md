@@ -1,7 +1,8 @@
 # distance_cluster
 ## Background and purpose
-In highly volatile environments (such as fraud prevention) a reliance on static, reactive rules frequently leads to minor behavioral shifts to escape a set of prevention rules, indicating a failure to close gaps permanently. While the occurrence of these behavioral shifts is expected, it is frequently unclear which aspect will be impacted, resulting in challenges of proactive implementation.
-The idea of these models is to describe targeted patterns as clusters in a latent space, and apply prevention based on low distance to clusters. This removes the need to predict the exact nature of behavioral shifts, and moves from a purely reactive towards proactive evaluation.
+In highly volatile environments (such as fraud prevention) a reliance on static, reactive rules frequently leads to minor behavioral shifts to escape a set of prevention rules. This approach solves the problem-on-hand in a **reactive** way, but the underlying gap remains. This inspires minor behavioral shifts to escape the reactive rule. While the occurrence of these behavioral shifts is expected, it is frequently unclear which aspect will be impacted, resulting in challenges of proactive implementation.
+
+The idea of these models is to describe targeted patterns as clusters in a latent space, and apply prevention based on low distance to clusters. Instead of attempting to predict the exact behavioral changes, we target all populations with low distances around the centroids of known behaviors. Minor shifts within low distance will be monitored in a **proactive** way, even if the exact nature of the behavior shift is unknown.
 
 ## Model parameters
 ### all distance models
