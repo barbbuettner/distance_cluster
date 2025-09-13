@@ -1,4 +1,4 @@
-# distance_cluster
+# prevention_clustering
 ## Background and purpose
 In highly volatile environments (such as fraud prevention) a reliance on static, reactive rules frequently leads to minor behavioral shifts to escape a set of prevention rules. This approach solves the problem-on-hand in a **reactive** way, but the underlying gap remains. This inspires minor behavioral shifts to escape the reactive rule. While the occurrence of these behavioral shifts is expected, it is frequently unclear which aspect will be impacted, resulting in challenges of proactive implementation.
 
