@@ -23,7 +23,7 @@ distances = clustering.transform(X_oot)
 ```
 The output is expected to be an array of distances between 0 and 1, with 0 denoting close proximity to the target data. 
 
-## embeddigns model: deep_embeddings_clustering.py
+## embeddings model: deep_embeddings_clustering.py
 This model represents an improvement over the baseline model in the following aspects:
 a. clustering over artifacts acquired from supervised preprocessing
 b. integration of categorical data through Weight of Evidence mapping
