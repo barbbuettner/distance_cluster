@@ -9,13 +9,18 @@ The fully fitted model can then consume any data and outputs the distance to the
 ### process flow
 Required: two datasets - one which only contains target-positive data (X_pos), and one which contains random training data (X). Any unseen data that we want to transform shall be denoted X_oot.
 #### 1 - learning the target centroids
+```
 clustering = Clustering()
 clustering._fit_cluster(X_pos)
+```
 #### 2 - learning the distance spectrum
+```
 clustering.fit(X)
+```
 #### 3 - transforming any new (unseen) data
-distances = clustering.transform(X_oot).
-
+```
+distances = clustering.transform(X_oot)
+```
 The output is expected to be an array of distances between 0 and 1, with 0 denoting close proximity to the target data. 
 
 ## embeddigns model: deep_embeddings_clustering.py
